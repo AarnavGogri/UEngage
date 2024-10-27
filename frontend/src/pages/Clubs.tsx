@@ -5,6 +5,7 @@ import { collection, getDocs, DocumentData, doc, updateDoc, arrayUnion } from 'f
 import { db } from '../firebase';
 import ClubCard from '../components/ClubCard';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const Clubs: React.FC = () => {
   const [clubs, setClubs] = useState<DocumentData[]>([]);
@@ -55,13 +56,18 @@ const Clubs: React.FC = () => {
   return (
     <div>
       <h2>Clubs</h2>
+      {currentUser && (
+        <Link to="/create-club">
+          <button>Create a New Club</button>
+        </Link>
+      )}
       {clubs.map((club) => (
         <ClubCard
           key={club.id}
           id={club.id}
           name={club.name}
           description={club.description}
-          category={club.category}
+          category={club.category} // If category is added later
           onJoin={handleJoinClub}
         />
       ))}
