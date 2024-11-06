@@ -8,6 +8,18 @@ import { getFirestore } from 'firebase/firestore';
 
 
 // Initialize Firebase
+
+
+const firebaseConfig = {
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+    authDomain: "uengage-278e4.firebaseapp.com",
+    projectId: "uengage-278e4",
+    storageBucket: "uengage-278e4.appspot.com",
+    messagingSenderId: "382763489448",
+    appId: "1:382763489448:web:db689a25c9ff4211db4a9d",
+    measurementId: "G-SHZHRKXDJY"
+};
+
 const app = initializeApp(firebaseConfig);
 
 // Initialize services
