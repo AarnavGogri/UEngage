@@ -14,7 +14,7 @@ const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
   const { currentUser } = useAuth();
   return currentUser ? children : <Navigate to="/login" />;
 };
-
+//hi
 const App: React.FC = () => (
   <AuthProvider>
     <Router>
