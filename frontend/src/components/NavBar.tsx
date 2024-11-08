@@ -19,6 +19,8 @@ const NavBar: React.FC = () => {
       {currentUser ? (
         <>
           {' '}
+          | <Link to="/create-club">Create Club</Link> {/* New Create Club link */}
+          {' '}
           | <Link to="/profile">Profile</Link> | <button onClick={handleLogout}>Logout</button>
         </>
       ) : (
