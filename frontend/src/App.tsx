@@ -9,7 +9,9 @@ import Home from './pages/Home';
 import Clubs from './pages/Clubs';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
-import CreateClub from './pages/CreateClub'; // Import the new page
+import CreateClub from './pages/CreateClub';
+import Events from './pages/Events';
+
 
 const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
   const { currentUser } = useAuth();
@@ -24,6 +26,7 @@ const App: React.FC = () => (
         <Route path="/" element={<Home />} />
         <Route path="/clubs" element={<Clubs />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/events" element={<Events />} />
         <Route
           path="/profile"
           element={
