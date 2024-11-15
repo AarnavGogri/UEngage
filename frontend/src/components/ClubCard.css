@@ -1,0 +1,72 @@
+/* src/components/ClubCard.css */
+
+.club-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 20px;
+    max-width: 400px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .club-card-image img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .club-card-content {
+    padding: 20px;
+  }
+  
+  .club-card-title {
+    color: #4b2e83; /* UW Purple */
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  .club-card-description {
+    color: #555;
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+  
+  .club-card-category {
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  
+  .join-button {
+    background-color: #b7a57a; /* UW Gold */
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .join-button:hover {
+    background-color: #9e8b60; /* Slightly darker gold on hover */
+  }
+  
+  @media (min-width: 600px) {
+    .club-card {
+      flex-direction: row;
+      max-width: none;
+    }
+  
+    .club-card-image,
+    .club-card-content {
+      flex: 1;
+    }
+  
+    .club-card-image img {
+      height: 100%;
+    }
+  }
+  

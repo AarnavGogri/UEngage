@@ -1,0 +1,64 @@
+/* src/components/NavBar.css */
+
+.navbar {
+    background-color: #4b2e83; /* UW Purple */
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .navbar-logo {
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  
+  .navbar-links {
+    display: flex;
+    align-items: center;
+  }
+  
+  .navbar-links a,
+  .logout-button {
+    color: #fff;
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: 18px;
+    transition: color 0.3s;
+  }
+  
+  .navbar-links a:hover,
+  .logout-button:hover {
+    color: #b7a57a; /* UW Gold */
+  }
+  
+  .logout-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  @media (max-width: 768px) {
+    .navbar-container {
+      flex-direction: column;
+    }
+  
+    .navbar-links {
+      flex-direction: column;
+      margin-top: 10px;
+    }
+  
+    .navbar-links a,
+    .logout-button {
+      margin: 10px 0;
+    }
+  }
+  
