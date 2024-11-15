@@ -6,6 +6,7 @@ import { db } from '../firebase';
 import ClubCard from '../components/ClubCard';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import './Clubs.css'; // Import CSS for styling
 
 const Clubs: React.FC = () => {
   const [clubs, setClubs] = useState<DocumentData[]>([]);
@@ -34,13 +35,11 @@ const Clubs: React.FC = () => {
     }
 
     try {
-      // Update club's members
       const clubRef = doc(db, 'clubs', clubId);
       await updateDoc(clubRef, {
         members: arrayUnion(currentUser.uid),
       });
 
-      // Update user's joined clubs
       const userRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userRef, {
         joinedClubs: arrayUnion(clubId),
@@ -54,23 +53,25 @@ const Clubs: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Clubs</h2>
+    <div className="clubs-container">
+      <h2>Explore Clubs</h2>
       {currentUser && (
         <Link to="/create-club">
-          <button>Create a New Club</button>
+          <button className="create-club-button">Create a New Club</button>
         </Link>
       )}
-      {clubs.map((club) => (
-        <ClubCard
-          key={club.id}
-          id={club.id}
-          name={club.name}
-          description={club.description}
-          category={club.category} // If category is added later
-          onJoin={handleJoinClub}
-        />
-      ))}
+      <div className="clubs-list">
+        {clubs.map((club) => (
+          <ClubCard
+            key={club.id}
+            id={club.id}
+            name={club.name}
+            description={club.description}
+            category={club.category}
+            onJoin={handleJoinClub}
+          />
+        ))}
+      </div>
     </div>
   );
 };

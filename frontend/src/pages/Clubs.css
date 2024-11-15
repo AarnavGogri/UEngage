@@ -1,0 +1,99 @@
+/* src/pages/Clubs.css */
+
+/* UW-themed gradient background with animation */
+@keyframes gradientBackground {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.clubs-container {
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(135deg, #4b2e83, #85754d, #4b2e83);
+    background-size: 200% 200%;
+    animation: gradientBackground 8s ease infinite;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+}
+
+/* Heading styling */
+h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: #ffd700;
+}
+
+/* Button styling */
+.create-club-button {
+    background-color: #4b2e83;
+    color: #ffffff;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.create-club-button:hover {
+    background-color: #ffd700;
+    color: #4b2e83;
+}
+
+/* Clubs list container */
+.clubs-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1200px;
+}
+
+/* Club card styling */
+.club-card {
+    background: rgba(255, 255, 255, 0.1); /* Glass effect */
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s;
+}
+
+.club-card:hover {
+    transform: translateY(-5px);
+}
+
+.club-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #ffd700;
+}
+
+.club-card p {
+    font-size: 1rem;
+    color: #e0e0e0;
+}
+
+/* Join button inside ClubCard */
+.join-button {
+    background-color: #ffd700;
+    color: #4b2e83;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.join-button:hover {
+    background-color: #4b2e83;
+    color: #ffd700;
+}
