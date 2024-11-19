@@ -20,7 +20,7 @@ const NavBar: React.FC = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          UW Community Engagement
+          UEngage
         </Link>
         <div className="navbar-links">
           <Link to="/">Home</Link>
@@ -29,7 +29,7 @@ const NavBar: React.FC = () => {
           {currentUser ? (
             <>
               <Link to="/profile">Profile</Link>
-              <Link to="/create-club">Create Club</Link>
+              <Link to="/create-club">Add Club</Link>
               <button className="logout-button" onClick={handleLogout}>Logout</button>
             </>
           ) : (
