@@ -3,10 +3,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import './NavBar.css'; // Import the CSS file
+import './NavBar.css';
 
 const NavBar: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth(); // Add logout from AuthContext
+
+  const handleLogout = async () => {
+    try {
+      await logout(); // Call the logout function
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
+  };
 
   return (
     <nav className="navbar">
@@ -22,7 +30,7 @@ const NavBar: React.FC = () => {
             <>
               <Link to="/profile">Profile</Link>
               <Link to="/create-club">Create Club</Link>
-              <button className="logout-button">Logout</button>
+              <button className="logout-button" onClick={handleLogout}>Logout</button>
             </>
           ) : (
             <Link to="/login">Login</Link>
