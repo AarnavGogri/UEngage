@@ -12,7 +12,7 @@ const NavBar: React.FC = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          UW Community Engagement
+          UEngage
         </Link>
         <div className="navbar-links">
           <Link to="/">Home</Link>
