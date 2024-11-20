@@ -1,51 +1,53 @@
 // src/App.tsx
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-
-import NavBar from './components/NavBar';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Clubs from './pages/Clubs';
-import Login from './pages/Login';
-import Profile from './pages/Profile';
+import ClubPage from './pages/ClubPage';
 import CreateClub from './pages/CreateClub';
+import Profile from './pages/Profile';
 import Events from './pages/Events';
+import Login from './pages/Login';
+import NavBar from './components/NavBar';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './PrivateRoute';
+import './App.css';
 
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <Router>
+        <NavBar />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/clubs" element={<Clubs />} />
+          <Route path="/clubs/:clubId" element={<ClubPage />} />
 
-const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
-  const { currentUser } = useAuth();
-  return currentUser ? children : <Navigate to="/login" />;
+          {/* Protected Routes */}
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/create-club"
+            element={
+              <PrivateRoute>
+                <CreateClub />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
 };
-
-const App: React.FC = () => (
-  <AuthProvider>
-    <Router>
-      <NavBar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/clubs" element={<Clubs />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/events" element={<Events />} />
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <Profile />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/create-club"
-          element={
-            <PrivateRoute>
-              <CreateClub />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-    </Router>
-  </AuthProvider>
-);
 
 export default App;

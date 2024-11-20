@@ -1,15 +1,19 @@
 // src/pages/Clubs.tsx
 
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, DocumentData, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, getDocs, DocumentData } from 'firebase/firestore';
 import { db } from '../firebase';
 import ClubCard from '../components/ClubCard';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import './Clubs.css';
 
 const Clubs: React.FC = () => {
   const [clubs, setClubs] = useState<DocumentData[]>([]);
+  const [searchInput, setSearchInput] = useState('');
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -27,35 +31,57 @@ const Clubs: React.FC = () => {
     fetchClubs();
   }, []);
 
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(event.target.value);
+    setIsDropdownVisible(true); // Show dropdown while typing
+  };
+
+  const handleDropdownItemClick = (clubId: string) => {
+    navigate(`/clubs/${clubId}`); // Navigate to the club's page
+    setIsDropdownVisible(false); // Hide the dropdown
+  };
+
+  const filteredClubs = clubs.filter((club) =>
+    club.name.toLowerCase().includes(searchInput.toLowerCase())
+  );
+
   const handleJoinClub = async (clubId: string) => {
     if (!currentUser) {
       alert('Please log in to join a club.');
       return;
     }
 
-    try {
-      // Update club's members
-      const clubRef = doc(db, 'clubs', clubId);
-      await updateDoc(clubRef, {
-        members: arrayUnion(currentUser.uid),
-      });
-
-      // Update user's joined clubs
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        joinedClubs: arrayUnion(clubId),
-      });
-
-      alert('Successfully joined the club!');
-    } catch (error: any) {
-      console.error('Error joining club:', error);
-      alert(`Error joining club: ${error.message}`);
-    }
+    // Join club logic here...
   };
 
   return (
-    <div>
-      <h2>Clubs</h2>
+    <div className="clubs-page">
+      <div className="clubs-header">
+        <h2 className="clubs-title">Clubs</h2>
+        <div className="search-container">
+          <input
+            type="text"
+            className="search-bar"
+            placeholder="Search clubs..."
+            value={searchInput}
+            onChange={handleSearchChange}
+            onClick={() => setIsDropdownVisible(true)} // Show dropdown when clicking
+          />
+          {isDropdownVisible && (
+            <div className="dropdown">
+              {filteredClubs.map((club) => (
+                <div
+                  key={club.id}
+                  className="dropdown-item"
+                  onClick={() => handleDropdownItemClick(club.id)}
+                >
+                  {club.name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
       {currentUser && (
         <Link to="/create-club">
           <button>Create a New Club</button>
