@@ -1,35 +1,42 @@
-// src/context/AuthContext.tsx
-
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signOut } from 'firebase/auth';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 
-interface AuthContextType {
+interface AuthContextProps {
   currentUser: User | null;
-  logout: () => Promise<void>; // Add logout to the context type
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  currentUser: null,
-  logout: async () => {}, // Add a default logout function
-});
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      setLoading(false);
     });
+
     return unsubscribe;
   }, []);
 
-  // Define the logout function
-  const logout = () => {
-    return signOut(auth);
+  const logout = async () => {
+    await signOut(auth);
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <AuthContext.Provider value={{ currentUser, logout }}>
@@ -37,28 +44,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-
-// import React, { createContext, useContext, useEffect, useState } from 'react';
-// import { User, onAuthStateChanged } from 'firebase/auth';
-// import { auth } from '../firebase';
-
-// interface AuthContextType {
-//   currentUser: User | null;
-// }
-
-// const AuthContext = createContext<AuthContextType>({ currentUser: null });
-
-// export const useAuth = () => useContext(AuthContext);
-
-// export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-//   const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-//   useEffect(() => {
-//     const unsubscribe = onAuthStateChanged(auth, (user) => {
-//       setCurrentUser(user);
-//     });
-//     return unsubscribe;
-//   }, []);
-
-//   return <AuthContext.Provider value={{ currentUser }}>{children}</AuthContext.Provider>;
-// };
