@@ -47,5 +47,8 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "https://aarnavgogri.github.io/uengage"
+  "homepage": "https://aarnavgogri.github.io/UEngage",
+  "devDependencies": {
+    "gh-pages": "^6.2.0"
+  }
 }
