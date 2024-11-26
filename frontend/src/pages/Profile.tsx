@@ -1,6 +1,20 @@
+// Profile.tsx
 import React, { useEffect, useState } from 'react';
+import {
+  collection,
+  doc,
+  getDoc,
+  // getDocs,
+  // query,
+  // where,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  addDoc,
+  Timestamp,
+  deleteDoc,
+} from 'firebase/firestore';
 import { db } from '../firebase';
-import { collection, doc, getDoc, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, addDoc, Timestamp, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 
 interface ClubData {
@@ -51,43 +65,62 @@ const Profile: React.FC = () => {
 
         // Fetch created clubs and their events
         if (createdClubIds.length > 0) {
-          const createdClubsQuery = query(collection(db, 'clubs'), where('__name__', 'in', createdClubIds.slice(0, 10)));
-          const createdClubsSnapshot = await getDocs(createdClubsQuery);
-          const clubsList = await Promise.all(
-            createdClubsSnapshot.docs.map(async (doc) => {
-              const club = { id: doc.id, ...doc.data() } as ClubData;
+          const createdClubsList: ClubData[] = [];
+          for (const clubId of createdClubIds) {
+            const clubDoc = await getDoc(doc(db, 'clubs', clubId));
+            if (clubDoc.exists()) {
+              const clubData = clubDoc.data();
+              const club: ClubData = {
+                id: clubDoc.id,
+                name: clubData?.name,
+                description: clubData?.description,
+                events: clubData?.events || [],
+              };
 
-              const eventsQuery = query(collection(db, 'events'), where('__name__', 'in', club.events.slice(0, 10)));
-              const eventsSnapshot = await getDocs(eventsQuery);
-              const clubEvents = eventsSnapshot.docs.map((eventDoc) => ({
-                id: eventDoc.id,
-                eventName: eventDoc.data().eventName,
-                eventDescription: eventDoc.data().eventDescription,
-                from: eventDoc.data().from.toDate(),
-                to: eventDoc.data().to.toDate(),
-              }));
+              // Fetch events for the club
+              const eventsIds = club.events || [];
+              if (eventsIds.length > 0) {
+                const clubEvents: EventData[] = [];
+                for (const eventId of eventsIds) {
+                  const eventDoc = await getDoc(doc(db, 'events', eventId));
+                  if (eventDoc.exists()) {
+                    const eventData = eventDoc.data();
+                    clubEvents.push({
+                      id: eventDoc.id,
+                      eventName: eventData?.eventName,
+                      eventDescription: eventData?.eventDescription,
+                      from: eventData?.from.toDate(),
+                      to: eventData?.to.toDate(),
+                    });
+                  }
+                }
+                setEvents((prevEvents) => ({
+                  ...prevEvents,
+                  [club.id]: clubEvents,
+                }));
+              }
 
-              setEvents((prevEvents) => ({
-                ...prevEvents,
-                [club.id]: clubEvents,
-              }));
-
-              return club;
-            })
-          );
-          setCreatedClubs(clubsList);
+              createdClubsList.push(club);
+            }
+          }
+          setCreatedClubs(createdClubsList);
         }
 
         // Fetch joined clubs
         if (joinedClubIds.length > 0) {
-          const joinedClubsQuery = query(collection(db, 'clubs'), where('__name__', 'in', joinedClubIds.slice(0, 10)));
-          const joinedClubsSnapshot = await getDocs(joinedClubsQuery);
-          const joinedClubsList = joinedClubsSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            name: doc.data().name,
-            description: doc.data().description,
-            events: [],
-          }));
+          const joinedClubsList: ClubData[] = [];
+          for (const clubId of joinedClubIds) {
+            const clubDoc = await getDoc(doc(db, 'clubs', clubId));
+            if (clubDoc.exists()) {
+              const clubData = clubDoc.data();
+              joinedClubsList.push({
+                id: clubDoc.id,
+                name: clubData?.name,
+                description: clubData?.description,
+                events: clubData?.events || [],
+              });
+            }
+          }
           setJoinedClubs(joinedClubsList);
         }
       } catch (error) {
@@ -107,7 +140,11 @@ const Profile: React.FC = () => {
     try {
       const clubRef = doc(db, 'clubs', clubId);
       await updateDoc(clubRef, { description: editedDescription });
-      setCreatedClubs((prev) => prev.map((club) => club.id === clubId ? { ...club, description: editedDescription } : club));
+      setCreatedClubs((prev) =>
+        prev.map((club) =>
+          club.id === clubId ? { ...club, description: editedDescription } : club
+        )
+      );
       setEditingClubId(null);
     } catch (error) {
       console.error('Error updating club description:', error);
@@ -128,7 +165,16 @@ const Profile: React.FC = () => {
       });
       setEvents((prevEvents) => ({
         ...prevEvents,
-        [clubId]: [...(prevEvents[clubId] || []), { id: eventRef.id, eventName, eventDescription, from: new Date(eventStart), to: new Date(eventEnd) }]
+        [clubId]: [
+          ...(prevEvents[clubId] || []),
+          {
+            id: eventRef.id,
+            eventName,
+            eventDescription,
+            from: new Date(eventStart),
+            to: new Date(eventEnd),
+          },
+        ],
       }));
       setIsCreatingEvent(null);
       setEventName('');
@@ -140,7 +186,11 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleEditEvent = (eventId: string, clubId: string, event: EventData) => {
+  const handleEditEvent = (
+    eventId: string,
+    clubId: string,
+    event: EventData
+  ) => {
     setEditingEventId(eventId);
     setEventName(event.eventName);
     setEventDescription(event.eventDescription);
@@ -162,7 +212,13 @@ const Profile: React.FC = () => {
         ...prevEvents,
         [clubId]: prevEvents[clubId].map((event) =>
           event.id === eventId
-            ? { ...event, eventName, eventDescription, from: new Date(eventStart), to: new Date(eventEnd) }
+            ? {
+                ...event,
+                eventName,
+                eventDescription,
+                from: new Date(eventStart),
+                to: new Date(eventEnd),
+              }
             : event
         ),
       }));
@@ -189,107 +245,179 @@ const Profile: React.FC = () => {
 
   const handleLeaveClub = async (clubId: string) => {
     if (!currentUser) return;
-  
+
     try {
       const userRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userRef, {
         joinedClubs: arrayRemove(clubId),
       });
-  
+
       // Update the local state to reflect the change
       setJoinedClubs((prev) => prev.filter((club) => club.id !== clubId));
     } catch (error) {
       console.error('Error leaving club:', error);
     }
-  };  
+  };
 
   return (
     <div>
       <h2>Your Profile</h2>
 
       <h3>Created Clubs</h3>
-      <ul>
-        {createdClubs.map((club) => (
-          <li key={club.id}>
-            <h4>{club.name}</h4>
-            {editingClubId === club.id ? (
-              <input
-                type="text"
-                value={editedDescription}
-                onChange={(e) => setEditedDescription(e.target.value)}
-              />
-            ) : (
-              <p>{club.description}</p>
-            )}
-            {editingClubId === club.id ? (
-              <button onClick={() => handleSaveDescription(club.id)}>Save</button>
-            ) : (
-              <button onClick={() => handleEditClub(club.id, club.description)}>Edit</button>
-            )}
-            <button onClick={() => setIsCreatingEvent(club.id)}>Create Event</button>
-            {isCreatingEvent === club.id && (
-              <form onSubmit={(e) => { e.preventDefault(); handleCreateEvent(club.id); }}>
-                <div>
-                  <label>Event Name:</label>
-                  <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
-                </div>
-                <div>
-                  <label>Event Description:</label>
-                  <textarea value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} required />
-                </div>
-                <div>
-                  <label>Start Time:</label>
-                  <input type="datetime-local" value={eventStart} onChange={(e) => setEventStart(e.target.value)} required />
-                </div>
-                <div>
-                  <label>End Time:</label>
-                  <input type="datetime-local" value={eventEnd} onChange={(e) => setEventEnd(e.target.value)} required />
-                </div>
-                <button type="submit">Save Event</button>
-                <button type="button" onClick={() => setIsCreatingEvent(null)}>Cancel</button>
-              </form>
-            )}
-            <h5>Events</h5>
-            <ul>
-              {(events[club.id] || []).map((event) => (
-                <li key={event.id}>
-                  {editingEventId === event.id ? (
-                    <>
-                      <div>
-                        <label>Event Name:</label>
-                        <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} />
-                      </div>
-                      <div>
-                        <label>Event Description:</label>
-                        <textarea value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
-                      </div>
-                      <div>
-                        <label>Start Time:</label>
-                        <input type="datetime-local" value={eventStart} onChange={(e) => setEventStart(e.target.value)} />
-                      </div>
-                      <div>
-                        <label>End Time:</label>
-                        <input type="datetime-local" value={eventEnd} onChange={(e) => setEventEnd(e.target.value)} />
-                      </div>
-                      <button onClick={() => handleSaveEvent(event.id, club.id)}>Save</button>
-                      <button onClick={() => setEditingEventId(null)}>Cancel</button>
-                    </>
-                  ) : (
-                    <>
-                      <h6>{event.eventName}</h6>
-                      <p>{event.eventDescription}</p>
-                      <p>From: {event.from.toLocaleString()}</p>
-                      <p>To: {event.to.toLocaleString()}</p>
-                      <button onClick={() => handleEditEvent(event.id, club.id, event)}>Edit</button>
-                      <button onClick={() => handleDeleteEvent(event.id, club.id)}>Delete</button>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      {createdClubs.length === 0 ? (
+        <p>You haven’t created any clubs yet.</p>
+      ) : (
+        <ul>
+          {createdClubs.map((club) => (
+            <li key={club.id}>
+              <h4>{club.name}</h4>
+              {editingClubId === club.id ? (
+                <input
+                  type="text"
+                  value={editedDescription}
+                  onChange={(e) => setEditedDescription(e.target.value)}
+                />
+              ) : (
+                <p>{club.description}</p>
+              )}
+              {editingClubId === club.id ? (
+                <button onClick={() => handleSaveDescription(club.id)}>
+                  Save
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleEditClub(club.id, club.description)}
+                >
+                  Edit
+                </button>
+              )}
+              <button onClick={() => setIsCreatingEvent(club.id)}>
+                Create Event
+              </button>
+              {isCreatingEvent === club.id && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleCreateEvent(club.id);
+                  }}
+                >
+                  <div>
+                    <label>Event Name:</label>
+                    <input
+                      type="text"
+                      value={eventName}
+                      onChange={(e) => setEventName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Event Description:</label>
+                    <textarea
+                      value={eventDescription}
+                      onChange={(e) => setEventDescription(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Start Time:</label>
+                    <input
+                      type="datetime-local"
+                      value={eventStart}
+                      onChange={(e) => setEventStart(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>End Time:</label>
+                    <input
+                      type="datetime-local"
+                      value={eventEnd}
+                      onChange={(e) => setEventEnd(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <button type="submit">Save Event</button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatingEvent(null)}
+                  >
+                    Cancel
+                  </button>
+                </form>
+              )}
+              <h5>Events</h5>
+              <ul>
+                {(events[club.id] || []).map((event) => (
+                  <li key={event.id}>
+                    {editingEventId === event.id ? (
+                      <>
+                        <div>
+                          <label>Event Name:</label>
+                          <input
+                            type="text"
+                            value={eventName}
+                            onChange={(e) => setEventName(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label>Event Description:</label>
+                          <textarea
+                            value={eventDescription}
+                            onChange={(e) => setEventDescription(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label>Start Time:</label>
+                          <input
+                            type="datetime-local"
+                            value={eventStart}
+                            onChange={(e) => setEventStart(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label>End Time:</label>
+                          <input
+                            type="datetime-local"
+                            value={eventEnd}
+                            onChange={(e) => setEventEnd(e.target.value)}
+                          />
+                        </div>
+                        <button
+                          onClick={() => handleSaveEvent(event.id, club.id)}
+                        >
+                          Save
+                        </button>
+                        <button onClick={() => setEditingEventId(null)}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <h6>{event.eventName}</h6>
+                        <p>{event.eventDescription}</p>
+                        <p>From: {event.from.toLocaleString()}</p>
+                        <p>To: {event.to.toLocaleString()}</p>
+                        <button
+                          onClick={() =>
+                            handleEditEvent(event.id, club.id, event)
+                          }
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEvent(event.id, club.id)}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <h3>Joined Clubs</h3>
       {joinedClubs.length === 0 ? (
@@ -300,7 +428,9 @@ const Profile: React.FC = () => {
             <li key={club.id}>
               <h4>{club.name}</h4>
               <p>{club.description}</p>
-              <button onClick={() => handleLeaveClub(club.id)}>Leave Club</button>
+              <button onClick={() => handleLeaveClub(club.id)}>
+                Leave Club
+              </button>
             </li>
           ))}
         </ul>

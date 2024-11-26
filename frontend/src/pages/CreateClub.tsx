@@ -50,7 +50,7 @@ const CreateClub: React.FC = () => {
 
   return (
     <div>
-      <h2>Create Club</h2>
+      <h2>Add Club</h2>
       <form onSubmit={handleCreateClub}>
         <div>
           <label>Club Name:</label>

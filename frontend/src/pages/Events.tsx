@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, documentId } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 
@@ -44,26 +44,36 @@ const Events: React.FC = () => {
           const clubDoc = await getDoc(doc(db, 'clubs', clubId));
           const clubData = clubDoc.data();
 
-          if (clubData && clubData.events) {
-            // Query events in the events array of the club
-            const eventsQuery = query(
-              collection(db, 'events'),
-              where('__name__', 'in', clubData.events.slice(0, 10)) // Limit to 10 events per club
-            );
-            const eventsSnapshot = await getDocs(eventsQuery);
+          if (clubData) {
+            const clubName = clubData.name || 'Unnamed Club';
 
-            const eventsList = eventsSnapshot.docs.map((eventDoc) => ({
-              id: eventDoc.id,
-              eventName: eventDoc.data().eventName,
-              eventDescription: eventDoc.data().eventDescription,
-              from: eventDoc.data().from.toDate(),
-              to: eventDoc.data().to.toDate(),
-            }));
+            if (clubData.events && clubData.events.length > 0) {
+              // Query events in the events array of the club
+              const eventsQuery = query(
+                collection(db, 'events'),
+                where(documentId(), 'in', clubData.events.slice(0, 10)) // Limit to 10 events per club
+              );
+              const eventsSnapshot = await getDocs(eventsQuery);
 
-            clubEventsList.push({
-              clubName: clubData.name,
-              events: eventsList,
-            });
+              const eventsList = eventsSnapshot.docs.map((eventDoc) => ({
+                id: eventDoc.id,
+                eventName: eventDoc.data().eventName,
+                eventDescription: eventDoc.data().eventDescription,
+                from: eventDoc.data().from.toDate(),
+                to: eventDoc.data().to.toDate(),
+              }));
+
+              clubEventsList.push({
+                clubName,
+                events: eventsList,
+              });
+            } else {
+              // Club has no events; add it with an empty events array
+              clubEventsList.push({
+                clubName,
+                events: [],
+              });
+            }
           }
         }
 
@@ -86,20 +96,20 @@ const Events: React.FC = () => {
           {clubEvents.map((club) => (
             <div key={club.clubName}>
               <h3>{club.clubName}</h3>
-              <ul>
-                {club.events.map((event) => (
-                  <li key={event.id}>
-                    <h4>{event.eventName}</h4>
-                    <p>{event.eventDescription}</p>
-                    <p>
-                        From: {event.from.toLocaleString()} 
-                    </p>
-                    <p>
-                        To: {event.to.toLocaleString()}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+              {club.events.length > 0 ? (
+                <ul>
+                  {club.events.map((event) => (
+                    <li key={event.id}>
+                      <h4>{event.eventName}</h4>
+                      <p>{event.eventDescription}</p>
+                      <p>From: {event.from.toLocaleString()}</p>
+                      <p>To: {event.to.toLocaleString()}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No events for this club.</p>
+              )}
             </div>
           ))}
         </div>
