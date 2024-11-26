@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/uengage/static/css/main.0062dd07.css",
+    "main.js": "/uengage/static/js/main.83b15d95.js",
+    "index.html": "/uengage/index.html",
+    "main.0062dd07.css.map": "/uengage/static/css/main.0062dd07.css.map",
+    "main.83b15d95.js.map": "/uengage/static/js/main.83b15d95.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0062dd07.css",
+    "static/js/main.83b15d95.js"
+  ]
+}
