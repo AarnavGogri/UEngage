@@ -6,36 +6,51 @@ import { useAuth } from '../context/AuthContext';
 import './NavBar.css';
 
 const NavBar: React.FC = () => {
-  const { currentUser, logout } = useAuth(); // Add logout from AuthContext
+  const { currentUser, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await logout(); // Call the logout function
+      await logout();
+      console.log('User logged out successfully');
     } catch (error) {
-      console.error('Failed to log out:', error);
+      console.error('Error during logout:', error);
     }
   };
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo">
-          UEngage
-        </Link>
-        <div className="navbar-links">
-          <Link to="/">Home</Link>
-          <Link to="/clubs">Clubs</Link>
-          <Link to="/events">Events</Link>
-          {currentUser ? (
-            <>
-              <Link to="/profile">Profile</Link>
-              <Link to="/create-club">Add Club</Link>
-              <button className="logout-button" onClick={handleLogout}>Logout</button>
-            </>
-          ) : (
-            <Link to="/login">Login</Link>
-          )}
+        <div className="navbar-logo">
+          <Link to="/">UEngage</Link>
         </div>
+        <ul className="navbar-menu">
+          <li>
+            <Link to="/">Home</Link>
+          </li>
+          <li>
+            <Link to="/clubs">Clubs</Link>
+          </li>
+          <li>
+            <Link to="/events">Events</Link>
+          </li>
+          <li>
+            <Link to="/profile">Profile</Link>
+          </li>
+          <li>
+            <Link to="/create-club">Add Club</Link>
+          </li>
+          {currentUser ? (
+            <li>
+              <button className="logout-button" onClick={handleLogout}>
+                Logout
+              </button>
+            </li>
+          ) : (
+            <li>
+              <Link to="/login">Login</Link>
+            </li>
+          )}
+        </ul>
       </div>
     </nav>
   );

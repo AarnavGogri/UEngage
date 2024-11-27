@@ -1,11 +1,22 @@
 /* src/App.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-  }
-  
-  .App {
-    text-align: center;
-  }
-  
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700; /* Bold for headings */
+}
+
+p, span, li, a, input, button {
+  font-weight: 400; /* Regular weight for body text */
+}
+
+.App {
+  text-align: center;
+}
