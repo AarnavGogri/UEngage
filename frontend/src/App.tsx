@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import Clubs from './pages/Clubs';
+import Explore from './pages/Explore';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import CreateClub from './pages/CreateClub';
@@ -21,6 +22,7 @@ const App: React.FC = () => (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/clubs" element={<Clubs />} />
+      <Route path="/explore" element={<Explore />} />
       <Route path="/login" element={<Login />} />
       <Route path="/events" element={<Events />} />
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />

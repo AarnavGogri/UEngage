@@ -20,6 +20,7 @@ const NavBar: React.FC = () => {
         <div className="navbar-links">
           <Link to="/">Home</Link>
           <Link to="/clubs">Clubs</Link>
+          <Link to="/explore">Explore</Link>
           <Link to="/events">Events</Link>
           {currentUser ? (
             <>
