@@ -1,118 +1,91 @@
 import React, { useEffect, useState } from 'react';
-import { collection, doc, getDoc, getDocs, query, where, documentId } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 interface EventData {
   id: string;
   eventName: string;
   eventDescription: string;
-  from: Date;
-  to: Date;
+  from: any; // Can be Firestore Timestamp or ISO string
+  to: any;
 }
 
 interface ClubEvents {
+  clubId: string;
   clubName: string;
   events: EventData[];
 }
 
 const Events: React.FC = () => {
   const [clubEvents, setClubEvents] = useState<ClubEvents[]>([]);
-  const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      if (!currentUser) return;
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      alert('Please log in to view events.');
+      navigate('/login');
+      return;
+    }
+    const user = JSON.parse(storedUser);
+    fetchEvents(user.uid, user.token);
+  }, [navigate]);
 
-      try {
-        // Step 1: Fetch user's joined clubs
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        const userData = userDoc.data();
+  const fetchEvents = async (userId: string, token: string) => {
+    try {
+      const response = await axios.get(`http://localhost:5001/api/events/joined/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log('Events response:', response.data);
+      setClubEvents(response.data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
 
-        if (!userData || !userData.joinedClubs) {
-          console.error('No joined clubs found for the user.');
-          return;
-        }
+  /**
+   * ✅ Converts Firestore Timestamps (_seconds) and normal date strings to readable format
+   */
+  const formatDate = (date: any): string => {
+    if (!date) return 'No date provided';
 
-        const joinedClubs = userData.joinedClubs;
+    // Handle Firestore Timestamp (_seconds format)
+    if (date._seconds) {
+      return new Date(date._seconds * 1000).toLocaleString();
+    }
 
-        // Step 2: Fetch events for each club and include the club name
-        const clubEventsList: ClubEvents[] = [];
-
-        for (const clubId of joinedClubs) {
-          // Fetch the club document to get the club name
-          const clubDoc = await getDoc(doc(db, 'clubs', clubId));
-          const clubData = clubDoc.data();
-
-          if (clubData) {
-            const clubName = clubData.name || 'Unnamed Club';
-
-            if (clubData.events && clubData.events.length > 0) {
-              // Query events in the events array of the club
-              const eventsQuery = query(
-                collection(db, 'events'),
-                where(documentId(), 'in', clubData.events.slice(0, 10)) // Limit to 10 events per club
-              );
-              const eventsSnapshot = await getDocs(eventsQuery);
-
-              const eventsList = eventsSnapshot.docs.map((eventDoc) => ({
-                id: eventDoc.id,
-                eventName: eventDoc.data().eventName,
-                eventDescription: eventDoc.data().eventDescription,
-                from: eventDoc.data().from.toDate(),
-                to: eventDoc.data().to.toDate(),
-              }));
-
-              clubEventsList.push({
-                clubName,
-                events: eventsList,
-              });
-            } else {
-              // Club has no events; add it with an empty events array
-              clubEventsList.push({
-                clubName,
-                events: [],
-              });
-            }
-          }
-        }
-
-        setClubEvents(clubEventsList);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      }
-    };
-
-    fetchEvents();
-  }, [currentUser]);
+    // Handle standard ISO date strings
+    const parsedDate = new Date(date);
+    return isNaN(parsedDate.getTime()) ? 'Invalid Date' : parsedDate.toLocaleString();
+  };
 
   return (
     <div>
-      <h2>Upcoming Events</h2>
+      <h2>Events</h2>
       {clubEvents.length === 0 ? (
-        <p>No upcoming events found.</p>
+        <p>No events found.</p>
       ) : (
-        <div>
-          {clubEvents.map((club) => (
-            <div key={club.clubName}>
-              <h3>{club.clubName}</h3>
-              {club.events.length > 0 ? (
-                <ul>
-                  {club.events.map((event) => (
-                    <li key={event.id}>
-                      <h4>{event.eventName}</h4>
-                      <p>{event.eventDescription}</p>
-                      <p>From: {event.from.toLocaleString()}</p>
-                      <p>To: {event.to.toLocaleString()}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No events for this club.</p>
-              )}
-            </div>
-          ))}
-        </div>
+        clubEvents.map((club) => (
+          <div key={club.clubId} style={{ border: '1px solid #ccc', margin: '10px', padding: '10px' }}>
+            <h3>{club.clubName}</h3>
+            {club.events.length === 0 ? (
+              <p>No events in this club.</p>
+            ) : (
+              <ul>
+                {club.events.map((event) => (
+                  <li key={event.id} style={{ marginBottom: '10px' }}>
+                    <h4>{event.eventName}</h4>
+                    <p>{event.eventDescription}</p>
+                    <p><strong>From:</strong> {formatDate(event.from)}</p>
+                    <p><strong>To:</strong> {formatDate(event.to)}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))
       )}
     </div>
   );

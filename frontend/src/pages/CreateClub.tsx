@@ -1,75 +1,47 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
-import { collection, addDoc, doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
-import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 const CreateClub: React.FC = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
 
   const handleCreateClub = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !description) {
-      alert('Please fill in all required fields.');
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      alert('Please log in to create a club.');
       return;
     }
 
-    if (!currentUser || !currentUser.uid) {
-      console.error("User is not authenticated.");
-      return;
-    }
+    const user = JSON.parse(storedUser);
+    const token = user.token;
 
     try {
-      // Step 1: Add a new club document to Firestore
-      const clubRef = await addDoc(collection(db, 'clubs'), {
-        name,
-        description,
-        owner: currentUser.uid,
-        admins: [currentUser.uid],
-        members: [currentUser.uid],
-        createdAt: Timestamp.now(),
-      });
-
-      // Step 2: Add the created club's ID to the user's 'createdClubs' field
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        createdClubs: arrayUnion(clubRef.id),
-      });
+      await axios.post(
+        'http://localhost:5001/api/clubs',
+        { name, description, userId: user.uid },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       alert('Club created successfully!');
-      navigate(`/clubs`); // Redirect to Clubs page or any other page as needed
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating club:', error);
-      alert(`Error creating club: ${error.message}`);
+      alert('Error creating club');
     }
   };
 
   return (
     <div>
-      <h2>Add Club</h2>
+      <h2>Create Club</h2>
       <form onSubmit={handleCreateClub}>
-        <div>
-          <label>Club Name:</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Description:</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Create Club</button>
+        <input type="text" placeholder="Club Name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} required />
+        <button type="submit">Create</button>
       </form>
     </div>
   );

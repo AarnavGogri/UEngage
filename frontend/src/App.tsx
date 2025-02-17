@@ -1,9 +1,6 @@
 // src/App.tsx
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import Clubs from './pages/Clubs';
@@ -12,40 +9,24 @@ import Profile from './pages/Profile';
 import CreateClub from './pages/CreateClub';
 import Events from './pages/Events';
 
-
 const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
-  const { currentUser } = useAuth();
+  const storedUser = localStorage.getItem('user');
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
   return currentUser ? children : <Navigate to="/login" />;
 };
 
 const App: React.FC = () => (
-  <AuthProvider>
-    <Router>
-      <NavBar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/clubs" element={<Clubs />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/events" element={<Events />} />
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <Profile />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/create-club"
-          element={
-            <PrivateRoute>
-              <CreateClub />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-    </Router>
-  </AuthProvider>
+  <Router>
+    <NavBar />
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/clubs" element={<Clubs />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/events" element={<Events />} />
+      <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+      <Route path="/create-club" element={<PrivateRoute><CreateClub /></PrivateRoute>} />
+    </Routes>
+  </Router>
 );
 
 export default App;
